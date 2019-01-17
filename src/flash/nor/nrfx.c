@@ -75,6 +75,11 @@ enum nrfx_ficr_registers {
 	NRFX_FICR_BLE_1MBIT2,
 	NRFX_FICR_BLE_1MBIT3,
 	NRFX_FICR_BLE_1MBIT4,
+	NRFX_FICR_PART,
+	NRFX_FICR_VARIANT,
+	NRFX_FICR_PACKAGE,
+	NRFX_FICR_RAM,
+	NRFX_FICR_FLASH,
 	NRFX_FICR_NREGS,
 };
 
@@ -113,6 +118,11 @@ static const uint32_t nrf5_ficr_registers[] = {
 	[NRFX_FICR_BLE_1MBIT2]		= NRF5_FICR_REG(0x0F4),
 	[NRFX_FICR_BLE_1MBIT3]		= NRF5_FICR_REG(0x0F8),
 	[NRFX_FICR_BLE_1MBIT4]		= NRF5_FICR_REG(0x0FC),
+	[NRFX_FICR_PART]		= NRFX_UNIMPLEMENTED,
+	[NRFX_FICR_VARIANT]		= NRFX_UNIMPLEMENTED,
+	[NRFX_FICR_PACKAGE]		= NRFX_UNIMPLEMENTED,
+	[NRFX_FICR_RAM]			= NRFX_UNIMPLEMENTED,
+	[NRFX_FICR_FLASH]		= NRFX_UNIMPLEMENTED,
 };
 
 static inline uint32_t nrfx_ficr_register(enum nrfx_ficr_registers r,
@@ -124,6 +134,12 @@ static inline uint32_t nrfx_ficr_register(enum nrfx_ficr_registers r,
 	default:
 		return NRFX_UNIMPLEMENTED;
 	}
+}
+
+static inline int is_implemented(enum nrfx_ficr_registers r,
+				 int family)
+{
+	return nrfx_ficr_register(r, family) != NRFX_UNIMPLEMENTED;
 }
 
 /* User Information Configuration Regsters */
@@ -271,21 +287,48 @@ static inline int nvmc_write(struct nrfx_info *chip, enum nrfx_ficr_registers r,
 	return reg_write(chip, nrfx_nvmc_register(r, chip->family), in);
 }
 
-struct nrfx_device_spec {
+union nrfx_device_id {
 	uint16_t hwid;
+	uint32_t part;
+};
+
+struct nrfx_device_data {
 	const char *part;
 	const char *variant;
 	const char *build_code;
 	unsigned int flash_size_kb;
 };
 
-#define NRFX_DEVICE_DEF(id, pt, var, bcode, fsize) \
-{                                                   \
-.hwid          = (id),                              \
-.part          = pt,                                \
-.variant       = var,                               \
-.build_code    = bcode,                             \
-.flash_size_kb = (fsize),                           \
+struct nrfx_device_spec {
+	int have_hwid;
+	union {
+		uint16_t hwid;
+		uint32_t part;
+	} id;
+	const char *part;
+	const char *variant;
+	const char *build_code;
+	unsigned int flash_size_kb;
+};
+
+#define NRF51_DEVICE_DEF(_id, pt, var, bcode, fsize)	\
+{							\
+	.have_hwid = 1,					\
+	.id = {						\
+		.hwid = (_id),				\
+	},						\
+	.part		= pt,				\
+	.variant	= var,				\
+	.build_code	= bcode,			\
+	.flash_size_kb	= (fsize),			\
+}
+
+#define NRF52_DEVICE_DEF(pt)				\
+{							\
+	.have_hwid = 0,					\
+	.id = {						\
+		.part = pt,				\
+	},						\
 }
 
 /* The known devices table below is derived from the "nRF51 Series
@@ -302,68 +345,66 @@ struct nrfx_device_spec {
  */
 static const struct nrfx_device_spec nrfx_known_devices_table[] = {
 	/* nRF51822 Devices (IC rev 1). */
-	NRFX_DEVICE_DEF(0x001D, "51822", "QFAA", "CA/C0", 256),
-	NRFX_DEVICE_DEF(0x0026, "51822", "QFAB", "AA",    128),
-	NRFX_DEVICE_DEF(0x0027, "51822", "QFAB", "A0",    128),
-	NRFX_DEVICE_DEF(0x0020, "51822", "CEAA", "BA",    256),
-	NRFX_DEVICE_DEF(0x002F, "51822", "CEAA", "B0",    256),
+	NRF51_DEVICE_DEF(0x001D, "51822", "QFAA", "CA/C0", 256),
+	NRF51_DEVICE_DEF(0x0026, "51822", "QFAB", "AA",    128),
+	NRF51_DEVICE_DEF(0x0027, "51822", "QFAB", "A0",    128),
+	NRF51_DEVICE_DEF(0x0020, "51822", "CEAA", "BA",    256),
+	NRF51_DEVICE_DEF(0x002F, "51822", "CEAA", "B0",    256),
 
 	/* Some early nRF51-DK (PCA10028) & nRF51-Dongle (PCA10031) boards
 	   with built-in jlink seem to use engineering samples not listed
 	   in the nRF51 Series Compatibility Matrix V1.0. */
-	NRFX_DEVICE_DEF(0x0071, "51822", "QFAC", "AB",    256),
+	NRF51_DEVICE_DEF(0x0071, "51822", "QFAC", "AB",    256),
 
 	/* nRF51822 Devices (IC rev 2). */
-	NRFX_DEVICE_DEF(0x002A, "51822", "QFAA", "FA0",   256),
-	NRFX_DEVICE_DEF(0x0044, "51822", "QFAA", "GC0",   256),
-	NRFX_DEVICE_DEF(0x003C, "51822", "QFAA", "G0",    256),
-	NRFX_DEVICE_DEF(0x0057, "51822", "QFAA", "G2",    256),
-	NRFX_DEVICE_DEF(0x0058, "51822", "QFAA", "G3",    256),
-	NRFX_DEVICE_DEF(0x004C, "51822", "QFAB", "B0",    128),
-	NRFX_DEVICE_DEF(0x0040, "51822", "CEAA", "CA0",   256),
-	NRFX_DEVICE_DEF(0x0047, "51822", "CEAA", "DA0",   256),
-	NRFX_DEVICE_DEF(0x004D, "51822", "CEAA", "D00",   256),
+	NRF51_DEVICE_DEF(0x002A, "51822", "QFAA", "FA0",   256),
+	NRF51_DEVICE_DEF(0x0044, "51822", "QFAA", "GC0",   256),
+	NRF51_DEVICE_DEF(0x003C, "51822", "QFAA", "G0",    256),
+	NRF51_DEVICE_DEF(0x0057, "51822", "QFAA", "G2",    256),
+	NRF51_DEVICE_DEF(0x0058, "51822", "QFAA", "G3",    256),
+	NRF51_DEVICE_DEF(0x004C, "51822", "QFAB", "B0",    128),
+	NRF51_DEVICE_DEF(0x0040, "51822", "CEAA", "CA0",   256),
+	NRF51_DEVICE_DEF(0x0047, "51822", "CEAA", "DA0",   256),
+	NRF51_DEVICE_DEF(0x004D, "51822", "CEAA", "D00",   256),
 
 	/* nRF51822 Devices (IC rev 3). */
-	NRFX_DEVICE_DEF(0x0072, "51822", "QFAA", "H0",    256),
-	NRFX_DEVICE_DEF(0x00D1, "51822", "QFAA", "H2",    256),
-	NRFX_DEVICE_DEF(0x007B, "51822", "QFAB", "C0",    128),
-	NRFX_DEVICE_DEF(0x0083, "51822", "QFAC", "A0",    256),
-	NRFX_DEVICE_DEF(0x0084, "51822", "QFAC", "A1",    256),
-	NRFX_DEVICE_DEF(0x007D, "51822", "CDAB", "A0",    128),
-	NRFX_DEVICE_DEF(0x0079, "51822", "CEAA", "E0",    256),
-	NRFX_DEVICE_DEF(0x0087, "51822", "CFAC", "A0",    256),
-	NRFX_DEVICE_DEF(0x008F, "51822", "QFAA", "H1",    256),
+	NRF51_DEVICE_DEF(0x0072, "51822", "QFAA", "H0",    256),
+	NRF51_DEVICE_DEF(0x00D1, "51822", "QFAA", "H2",    256),
+	NRF51_DEVICE_DEF(0x007B, "51822", "QFAB", "C0",    128),
+	NRF51_DEVICE_DEF(0x0083, "51822", "QFAC", "A0",    256),
+	NRF51_DEVICE_DEF(0x0084, "51822", "QFAC", "A1",    256),
+	NRF51_DEVICE_DEF(0x007D, "51822", "CDAB", "A0",    128),
+	NRF51_DEVICE_DEF(0x0079, "51822", "CEAA", "E0",    256),
+	NRF51_DEVICE_DEF(0x0087, "51822", "CFAC", "A0",    256),
+	NRF51_DEVICE_DEF(0x008F, "51822", "QFAA", "H1",    256),
 	/* nRF51422 Devices (IC rev 1). */
-	NRFX_DEVICE_DEF(0x001E, "51422", "QFAA", "CA",    256),
-	NRFX_DEVICE_DEF(0x0024, "51422", "QFAA", "C0",    256),
-	NRFX_DEVICE_DEF(0x0031, "51422", "CEAA", "A0A",   256),
+	NRF51_DEVICE_DEF(0x001E, "51422", "QFAA", "CA",    256),
+	NRF51_DEVICE_DEF(0x0024, "51422", "QFAA", "C0",    256),
+	NRF51_DEVICE_DEF(0x0031, "51422", "CEAA", "A0A",   256),
 
 	/* nRF51422 Devices (IC rev 2). */
-	NRFX_DEVICE_DEF(0x002D, "51422", "QFAA", "DAA",   256),
-	NRFX_DEVICE_DEF(0x002E, "51422", "QFAA", "E0",    256),
-	NRFX_DEVICE_DEF(0x0061, "51422", "QFAB", "A00",   128),
-	NRFX_DEVICE_DEF(0x0050, "51422", "CEAA", "B0",    256),
+	NRF51_DEVICE_DEF(0x002D, "51422", "QFAA", "DAA",   256),
+	NRF51_DEVICE_DEF(0x002E, "51422", "QFAA", "E0",    256),
+	NRF51_DEVICE_DEF(0x0061, "51422", "QFAB", "A00",   128),
+	NRF51_DEVICE_DEF(0x0050, "51422", "CEAA", "B0",    256),
 
 	/* nRF51422 Devices (IC rev 3). */
-	NRFX_DEVICE_DEF(0x0073, "51422", "QFAA", "F0",    256),
-	NRFX_DEVICE_DEF(0x007C, "51422", "QFAB", "B0",    128),
-	NRFX_DEVICE_DEF(0x0085, "51422", "QFAC", "A0",    256),
-	NRFX_DEVICE_DEF(0x0086, "51422", "QFAC", "A1",    256),
-	NRFX_DEVICE_DEF(0x007E, "51422", "CDAB", "A0",    128),
-	NRFX_DEVICE_DEF(0x007A, "51422", "CEAA", "C0",    256),
-	NRFX_DEVICE_DEF(0x0088, "51422", "CFAC", "A0",    256),
+	NRF51_DEVICE_DEF(0x0073, "51422", "QFAA", "F0",    256),
+	NRF51_DEVICE_DEF(0x007C, "51422", "QFAB", "B0",    128),
+	NRF51_DEVICE_DEF(0x0085, "51422", "QFAC", "A0",    256),
+	NRF51_DEVICE_DEF(0x0086, "51422", "QFAC", "A1",    256),
+	NRF51_DEVICE_DEF(0x007E, "51422", "CDAB", "A0",    128),
+	NRF51_DEVICE_DEF(0x007A, "51422", "CEAA", "C0",    256),
+	NRF51_DEVICE_DEF(0x0088, "51422", "CFAC", "A0",    256),
 
 	/* nRF52810 Devices */
-	NRFX_DEVICE_DEF(0x0142, "52810", "QFAA", "B0",    192),
-	NRFX_DEVICE_DEF(0x0143, "52810", "QCAA", "C0",    192),
+	NRF52_DEVICE_DEF(0x52810),
 
 	/* nRF52832 Devices */
-	NRFX_DEVICE_DEF(0x00C7, "52832", "QFAA", "B0",    512),
-	NRFX_DEVICE_DEF(0x0139, "52832", "QFAA", "E0",    512),
+	NRF52_DEVICE_DEF(0x52832),
 
 	/* nRF52840 Devices */
-	NRFX_DEVICE_DEF(0x0150, "52840", "QIAA", "C0",    1024),
+	NRF52_DEVICE_DEF(0x52840),
 };
 
 static int nrfx_bank_is_probed(struct flash_bank *bank)
@@ -595,37 +636,96 @@ static int nrfx_protect(struct flash_bank *bank, int set, int first, int last)
 	return ERROR_OK;
 }
 
-static int nrfx_probe(struct flash_bank *bank)
+static void log_probed_chip(struct nrfx_info *chip,
+			    const struct nrfx_device_spec *spec,
+			    int have_hwid, uint32_t hwid, uint32_t part)
 {
-	uint32_t hwid;
-	int res;
-	struct nrfx_info *chip = bank->driver_priv;
-
-	res = ficr_read(chip, NRFX_FICR_CONFIGID, &hwid);
-	if (res != ERROR_OK) {
-		LOG_ERROR("Couldn't read CONFIGID register");
-		return res;
+	if (!spec) {
+		LOG_WARNING("Unknown device (%s 0x%08" PRIx32 ")",
+			    have_hwid ? "HWID" : "PART NUMBER",
+			    have_hwid ? hwid : part);
+		return;
 	}
 
-	hwid &= 0xFFFF;	/* HWID is stored in the lower two
-			 * bytes of the CONFIGID register */
+	if (spec->have_hwid) {
+		LOG_INFO("nRF%s-%s(build code: %s) %ukB Flash",
+			 spec->part,
+			 spec->variant,
+			 spec->build_code,
+			 spec->flash_size_kb);
+		return;
+	}
+	/* No hwid, get data from ficr registers */
+	LOG_INFO("device: nRF%" PRIx32, part);
+}
+
+static void check_probed_chip_size(struct nrfx_info *chip,
+				   unsigned int bank_size,
+				   const struct nrfx_device_spec *spec)
+{
+	uint32_t flash_size_kb = 0;
+
+	if (spec && spec->flash_size_kb)
+		flash_size_kb = spec->flash_size_kb;
+	else {
+		if (ficr_read(chip, NRFX_FICR_FLASH, &flash_size_kb) != ERROR_OK) {
+			LOG_ERROR("Could not read chip's flash size");
+			return;
+		}
+	}
+	if ((bank_size >> 10) != flash_size_kb)
+		LOG_WARNING("Chip's reported Flash capacity does not match expected one (%u != %u)", bank_size, flash_size_kb);
+	return;
+}
+
+static int nrfx_probe(struct flash_bank *bank)
+{
+	uint32_t hwid = 0, part = 0;
+	int res, have_hwid = 0, have_part = 0;
+	struct nrfx_info *chip = bank->driver_priv;
+
+	if (is_implemented(NRFX_FICR_CONFIGID, chip->family)) {
+		res = ficr_read(chip, NRFX_FICR_CONFIGID, &hwid);
+		if (res != ERROR_OK) {
+			LOG_ERROR("Couldn't read CONFIGID register");
+			return res;
+		}
+		have_hwid = 1;
+		hwid &= 0xFFFF;	/* HWID is stored in the lower two
+				 * bytes of the CONFIGID register */
+	}
+	if (is_implemented(NRFX_FICR_PART, chip->family)) {
+		res = ficr_read(chip, NRFX_FICR_PART, &part);
+		if (res != ERROR_OK) {
+			LOG_ERROR("Couldn't read PART register");
+			return res;
+		}
+		have_part = 1;
+	}
+
+	if (!have_hwid && !have_part) {
+		LOG_ERROR("Neither CONFIGID nor PART implemented\n");
+		return ERROR_FAIL;
+	}
 
 	const struct nrfx_device_spec *spec = NULL;
 	for (size_t i = 0; i < ARRAY_SIZE(nrfx_known_devices_table); i++) {
-		if (hwid == nrfx_known_devices_table[i].hwid) {
+		spec = &nrfx_known_devices_table[i];
+
+		if (spec->have_hwid && have_hwid && hwid ==
+		    spec->id.hwid) {
+			spec = &nrfx_known_devices_table[i];
+			break;
+		}
+		if (!spec->have_hwid && have_part && part ==
+		    spec->id.part) {
 			spec = &nrfx_known_devices_table[i];
 			break;
 		}
 	}
 
-	if (!chip->bank[0].probed && !chip->bank[1].probed) {
-		if (spec)
-			LOG_INFO("nRF%s-%s(build code: %s) %ukB Flash",
-				 spec->part, spec->variant, spec->build_code,
-				 spec->flash_size_kb);
-		else
-			LOG_WARNING("Unknown device (HWID 0x%08" PRIx32 ")", hwid);
-	}
+	if (!chip->bank[0].probed && !chip->bank[1].probed)
+		log_probed_chip(chip, spec, have_hwid, hwid, part);
 
 	if (bank->base == NRFX_FLASH_BASE) {
 		/* The value stored in NRFX_FICR_CODEPAGESIZE is the number of bytes in one page of FLASH. */
@@ -648,8 +748,7 @@ static int nrfx_probe(struct flash_bank *bank)
 		bank->num_sectors = num_sectors;
 		bank->size = num_sectors * chip->code_page_size;
 
-		if (spec && bank->size / 1024 != spec->flash_size_kb)
-			LOG_WARNING("Chip's reported Flash capacity does not match expected one");
+		check_probed_chip_size(chip, bank->size, spec);
 
 		bank->sectors = calloc(bank->num_sectors,
 				       sizeof((bank->sectors)[0]));
