@@ -39,9 +39,43 @@ enum {
 
 #define NRFX_UNIMPLEMENTED 0xffffffff
 
+/*
+ * The following nrfx_<unit>_registers enums contain "virtual"
+ * registers definitions: they just link each register's name to an integer
+ * index. The index is made of a 12bits progressive number ored with
+ * another number which represents the hw unit the register itself belongs to.
+ */
+#define REG_INDEX_BITS 12
+
+#define REG_INDEX_MASK ((1 << REG_INDEX_BITS) - 1)
+
+#define FICR_ID (0 << REG_INDEX_BITS)
+#define UICR_ID (1 << REG_INDEX_BITS)
+#define NVMC_ID (2 << REG_INDEX_BITS)
+
+#define FICR_BASE FICR_ID
+#define UICR_BASE UICR_ID
+#define NVMC_BASE NVMC_ID
+
+#define reg_index(r) ((r) & REG_INDEX_MASK)
+
+static inline int is_ficr(int n)
+{
+	return ((n & ~REG_INDEX_MASK) == FICR_ID);
+}
+
+static inline int is_uicr(int n)
+{
+	return ((n & ~REG_INDEX_MASK) == UICR_ID);
+}
+
+static inline int is_nvmc(int n)
+{
+	return ((n & ~REG_INDEX_MASK) == NVMC_ID);
+}
 
 enum nrfx_ficr_registers {
-	NRFX_FICR_CODEPAGESIZE = 0,
+	NRFX_FICR_CODEPAGESIZE = FICR_BASE,
 	NRFX_FICR_CODESIZE,
 	NRFX_FICR_CLENR0,
 	NRFX_FICR_PPFC,
@@ -80,49 +114,49 @@ enum nrfx_ficr_registers {
 	NRFX_FICR_PACKAGE,
 	NRFX_FICR_RAM,
 	NRFX_FICR_FLASH,
-	NRFX_FICR_NREGS,
+	NRFX_FICR_NREGS = ((NRFX_FICR_FLASH + 1) & REG_INDEX_MASK),
 };
 
 static const uint32_t nrf51_ficr_registers[] = {
-	[NRFX_FICR_CODEPAGESIZE]	= NRF5_FICR_REG(0x010),
-	[NRFX_FICR_CODESIZE]		= NRF5_FICR_REG(0x014),
-	[NRFX_FICR_CLENR0]		= NRF5_FICR_REG(0x028),
-	[NRFX_FICR_PPFC]		= NRF5_FICR_REG(0x02C),
-	[NRFX_FICR_NUMRAMBLOCK]		= NRF5_FICR_REG(0x034),
-	[NRFX_FICR_SIZERAMBLOCK0]	= NRF5_FICR_REG(0x038),
-	[NRFX_FICR_SIZERAMBLOCK1]	= NRF5_FICR_REG(0x03C),
-	[NRFX_FICR_SIZERAMBLOCK2]	= NRF5_FICR_REG(0x040),
-	[NRFX_FICR_SIZERAMBLOCK3]	= NRF5_FICR_REG(0x044),
-	[NRFX_FICR_CONFIGID]		= NRF5_FICR_REG(0x05C),
-	[NRFX_FICR_DEVICEID0]		= NRF5_FICR_REG(0x060),
-	[NRFX_FICR_DEVICEID1]		= NRF5_FICR_REG(0x064),
-	[NRFX_FICR_ER0]			= NRF5_FICR_REG(0x080),
-	[NRFX_FICR_ER1]			= NRF5_FICR_REG(0x084),
-	[NRFX_FICR_ER2]			= NRF5_FICR_REG(0x088),
-	[NRFX_FICR_ER3]			= NRF5_FICR_REG(0x08C),
-	[NRFX_FICR_IR0]			= NRF5_FICR_REG(0x090),
-	[NRFX_FICR_IR1]			= NRF5_FICR_REG(0x094),
-	[NRFX_FICR_IR2]			= NRF5_FICR_REG(0x098),
-	[NRFX_FICR_IR3]			= NRF5_FICR_REG(0x09C),
-	[NRFX_FICR_DEVICEADDRTYPE]	= NRF5_FICR_REG(0x0A0),
-	[NRFX_FICR_DEVICEADDR0]		= NRF5_FICR_REG(0x0A4),
-	[NRFX_FICR_DEVICEADDR1]		= NRF5_FICR_REG(0x0A8),
-	[NRFX_FICR_OVERRIDEN]		= NRF5_FICR_REG(0x0AC),
-	[NRFX_FICR_NRF_1MBIT0]		= NRF5_FICR_REG(0x0B0),
-	[NRFX_FICR_NRF_1MBIT1]		= NRF5_FICR_REG(0x0B4),
-	[NRFX_FICR_NRF_1MBIT2]		= NRF5_FICR_REG(0x0B8),
-	[NRFX_FICR_NRF_1MBIT3]		= NRF5_FICR_REG(0x0BC),
-	[NRFX_FICR_NRF_1MBIT4]		= NRF5_FICR_REG(0x0C0),
-	[NRFX_FICR_BLE_1MBIT0]		= NRF5_FICR_REG(0x0EC),
-	[NRFX_FICR_BLE_1MBIT1]		= NRF5_FICR_REG(0x0F0),
-	[NRFX_FICR_BLE_1MBIT2]		= NRF5_FICR_REG(0x0F4),
-	[NRFX_FICR_BLE_1MBIT3]		= NRF5_FICR_REG(0x0F8),
-	[NRFX_FICR_BLE_1MBIT4]		= NRF5_FICR_REG(0x0FC),
-	[NRFX_FICR_PART]		= NRFX_UNIMPLEMENTED,
-	[NRFX_FICR_VARIANT]		= NRFX_UNIMPLEMENTED,
-	[NRFX_FICR_PACKAGE]		= NRFX_UNIMPLEMENTED,
-	[NRFX_FICR_RAM]			= NRFX_UNIMPLEMENTED,
-	[NRFX_FICR_FLASH]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_CODEPAGESIZE)]	= NRF5_FICR_REG(0x010),
+	[reg_index(NRFX_FICR_CODESIZE)]		= NRF5_FICR_REG(0x014),
+	[reg_index(NRFX_FICR_CLENR0)]		= NRF5_FICR_REG(0x028),
+	[reg_index(NRFX_FICR_PPFC)]		= NRF5_FICR_REG(0x02C),
+	[reg_index(NRFX_FICR_NUMRAMBLOCK)]	= NRF5_FICR_REG(0x034),
+	[reg_index(NRFX_FICR_SIZERAMBLOCK0)]	= NRF5_FICR_REG(0x038),
+	[reg_index(NRFX_FICR_SIZERAMBLOCK1)]	= NRF5_FICR_REG(0x03C),
+	[reg_index(NRFX_FICR_SIZERAMBLOCK2)]	= NRF5_FICR_REG(0x040),
+	[reg_index(NRFX_FICR_SIZERAMBLOCK3)]	= NRF5_FICR_REG(0x044),
+	[reg_index(NRFX_FICR_CONFIGID)]		= NRF5_FICR_REG(0x05C),
+	[reg_index(NRFX_FICR_DEVICEID0)]	= NRF5_FICR_REG(0x060),
+	[reg_index(NRFX_FICR_DEVICEID1)]	= NRF5_FICR_REG(0x064),
+	[reg_index(NRFX_FICR_ER0)]		= NRF5_FICR_REG(0x080),
+	[reg_index(NRFX_FICR_ER1)]		= NRF5_FICR_REG(0x084),
+	[reg_index(NRFX_FICR_ER2)]		= NRF5_FICR_REG(0x088),
+	[reg_index(NRFX_FICR_ER3)]		= NRF5_FICR_REG(0x08C),
+	[reg_index(NRFX_FICR_IR0)]		= NRF5_FICR_REG(0x090),
+	[reg_index(NRFX_FICR_IR1)]		= NRF5_FICR_REG(0x094),
+	[reg_index(NRFX_FICR_IR2)]		= NRF5_FICR_REG(0x098),
+	[reg_index(NRFX_FICR_IR3)]		= NRF5_FICR_REG(0x09C),
+	[reg_index(NRFX_FICR_DEVICEADDRTYPE)]	= NRF5_FICR_REG(0x0A0),
+	[reg_index(NRFX_FICR_DEVICEADDR0)]	= NRF5_FICR_REG(0x0A4),
+	[reg_index(NRFX_FICR_DEVICEADDR1)]	= NRF5_FICR_REG(0x0A8),
+	[reg_index(NRFX_FICR_OVERRIDEN)]	= NRF5_FICR_REG(0x0AC),
+	[reg_index(NRFX_FICR_NRF_1MBIT0)]	= NRF5_FICR_REG(0x0B0),
+	[reg_index(NRFX_FICR_NRF_1MBIT1)]	= NRF5_FICR_REG(0x0B4),
+	[reg_index(NRFX_FICR_NRF_1MBIT2)]	= NRF5_FICR_REG(0x0B8),
+	[reg_index(NRFX_FICR_NRF_1MBIT3)]	= NRF5_FICR_REG(0x0BC),
+	[reg_index(NRFX_FICR_NRF_1MBIT4)]	= NRF5_FICR_REG(0x0C0),
+	[reg_index(NRFX_FICR_BLE_1MBIT0)]	= NRF5_FICR_REG(0x0EC),
+	[reg_index(NRFX_FICR_BLE_1MBIT1)]	= NRF5_FICR_REG(0x0F0),
+	[reg_index(NRFX_FICR_BLE_1MBIT2)]	= NRF5_FICR_REG(0x0F4),
+	[reg_index(NRFX_FICR_BLE_1MBIT3)]	= NRF5_FICR_REG(0x0F8),
+	[reg_index(NRFX_FICR_BLE_1MBIT4)]	= NRF5_FICR_REG(0x0FC),
+	[reg_index(NRFX_FICR_PART)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_VARIANT)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_PACKAGE)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_RAM)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_FLASH)]		= NRFX_UNIMPLEMENTED,
 };
 
 /* User Information Configuration Regsters */
@@ -143,18 +177,22 @@ static inline uint32_t nrfx_uicr_base(int family)
 }
 
 enum nrfx_uicr_registers {
-	NRFX_UICR_CLENR0 = 0,
+	NRFX_UICR_CLENR0 = UICR_BASE,
 	NRFX_UICR_RBPCONF,
 	NRFX_UICR_XTALFREQ,
 	NRFX_UICR_FWID,
-	NRFX_UICR_NREGS,
+	NRFX_UICR_PSELRESET0,
+	NRFX_UICR_PSELRESET1,
+	NRFX_UICR_APPROTECT,
+	NRFX_UICR_NFCPINS,
+	NRFX_UICR_NREGS = ((NRFX_UICR_NFCPINS + 1) & REG_INDEX_MASK),
 };
 
 static const uint32_t nrf51_uicr_registers[] = {
-	[NRFX_UICR_CLENR0]	= NRF5_UICR_REG(0x000),
-	[NRFX_UICR_RBPCONF]	= NRF5_UICR_REG(0x004),
-	[NRFX_UICR_XTALFREQ]	= NRF5_UICR_REG(0x008),
-	[NRFX_UICR_FWID]	= NRF5_UICR_REG(0x010),
+	[reg_index(NRFX_UICR_CLENR0)]	= NRF5_UICR_REG(0x000),
+	[reg_index(NRFX_UICR_RBPCONF)]	= NRF5_UICR_REG(0x004),
+	[reg_index(NRFX_UICR_XTALFREQ)]	= NRF5_UICR_REG(0x008),
+	[reg_index(NRFX_UICR_FWID)]	= NRF5_UICR_REG(0x010),
 };
 
 /* Non-Volatile Memory Controller Registers */
@@ -163,7 +201,7 @@ static const uint32_t nrf51_uicr_registers[] = {
 #define NRF5_NVMC_REG(offset) (NRF5_NVMC_BASE + offset)
 
 enum nrfx_nvmc_registers {
-	NRFX_NVMC_READY,
+	NRFX_NVMC_READY = NVMC_BASE,
 	NRFX_NVMC_CONFIG,
 	NRFX_NVMC_ERASEPAGE,
 	NRFX_NVMC_ERASEALL,
@@ -177,11 +215,11 @@ enum nrfx_nvmc_config_bits {
 };
 
 static const uint32_t nrf51_nvmc_registers[] = {
-	[NRFX_NVMC_READY]	= NRF5_NVMC_REG(0x400),
-	[NRFX_NVMC_CONFIG]	= NRF5_NVMC_REG(0x504),
-	[NRFX_NVMC_ERASEPAGE]	= NRF5_NVMC_REG(0x508),
-	[NRFX_NVMC_ERASEALL]	= NRF5_NVMC_REG(0x50C),
-	[NRFX_NVMC_ERASEUICR]	= NRF5_NVMC_REG(0x514),
+	[reg_index(NRFX_NVMC_READY)]		= NRF5_NVMC_REG(0x400),
+	[reg_index(NRFX_NVMC_CONFIG)]		= NRF5_NVMC_REG(0x504),
+	[reg_index(NRFX_NVMC_ERASEPAGE)]	= NRF5_NVMC_REG(0x508),
+	[reg_index(NRFX_NVMC_ERASEALL)]		= NRF5_NVMC_REG(0x50C),
+	[reg_index(NRFX_NVMC_ERASEUICR)]	= NRF5_NVMC_REG(0x514),
 };
 
 struct nrfx_info {
@@ -218,43 +256,43 @@ static inline int reg_write(struct nrfx_info *chip, uint32_t addr, uint32_t in)
 static inline int ficr_read(struct nrfx_info *chip, enum nrfx_ficr_registers r,
 			    uint32_t *out)
 {
-	return reg_read(chip, chip->ficr_registers[r], out);
+	return reg_read(chip, chip->ficr_registers[r & REG_INDEX_MASK], out);
 }
 
 static inline int ficr_write(struct nrfx_info *chip, enum nrfx_ficr_registers r,
 			     uint32_t in)
 {
-	return reg_write(chip, chip->ficr_registers[r], in);
+	return reg_write(chip, chip->ficr_registers[r & REG_INDEX_MASK], in);
 }
 
 static inline int uicr_read(struct nrfx_info *chip, enum nrfx_uicr_registers r,
 			    uint32_t *out)
 {
-	return reg_read(chip, chip->uicr_registers[r], out);
+	return reg_read(chip, chip->uicr_registers[r & REG_INDEX_MASK], out);
 }
 
 static inline int uicr_write(struct nrfx_info *chip, enum nrfx_ficr_registers r,
 			     uint32_t in)
 {
-	return reg_write(chip, chip->uicr_registers[r], in);
+	return reg_write(chip, chip->uicr_registers[r & REG_INDEX_MASK], in);
 }
 
 static inline int nvmc_read(struct nrfx_info *chip, enum nrfx_uicr_registers r,
 			    uint32_t *out)
 {
-	return reg_read(chip, chip->nvmc_registers[r], out);
+	return reg_read(chip, chip->nvmc_registers[r & REG_INDEX_MASK], out);
 }
 
 static inline int nvmc_write(struct nrfx_info *chip, enum nrfx_ficr_registers r,
 			     uint32_t in)
 {
-	return reg_write(chip, chip->nvmc_registers[r], in);
+	return reg_write(chip, chip->nvmc_registers[r & REG_INDEX_MASK], in);
 }
 
 static inline int ficr_is_implemented(struct nrfx_info *chip,
 				      enum nrfx_ficr_registers r)
 {
-	return chip->ficr_registers[r] != NRFX_UNIMPLEMENTED;
+	return chip->ficr_registers[r & REG_INDEX_MASK] != NRFX_UNIMPLEMENTED;
 }
 
 union nrfx_device_id {
@@ -1329,11 +1367,11 @@ static int nrfx_info(struct flash_bank *bank, char *buf, int buf_size)
 		 ficr[NRFX_FICR_BLE_1MBIT0], ficr[NRFX_FICR_BLE_1MBIT1],
 		 ficr[NRFX_FICR_BLE_1MBIT2], ficr[NRFX_FICR_BLE_1MBIT3],
 		 ficr[NRFX_FICR_BLE_1MBIT4],
-		 (uicr[NRFX_UICR_CLENR0] == 0xFFFFFFFF) ?
-		 0 : uicr[NRFX_UICR_CLENR0] >> 10,
-		 uicr[NRFX_UICR_RBPCONF] & 0xFFFF,
-		 uicr[NRFX_UICR_XTALFREQ] & 0xFF,
-		 uicr[NRFX_UICR_FWID] & 0xFFFF);
+		 (uicr[NRFX_UICR_CLENR0 & REG_INDEX_MASK] == 0xFFFFFFFF) ?
+		 0 : uicr[NRFX_UICR_CLENR0 & REG_INDEX_MASK] >> 10,
+		 uicr[NRFX_UICR_RBPCONF & REG_INDEX_MASK] & 0xFFFF,
+		 uicr[NRFX_UICR_XTALFREQ & REG_INDEX_MASK] & 0xFF,
+		 uicr[NRFX_UICR_FWID & REG_INDEX_MASK] & 0xFFFF);
 
 	return ERROR_OK;
 }
