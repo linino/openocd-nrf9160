@@ -83,7 +83,7 @@ enum nrfx_ficr_registers {
 	NRFX_FICR_NREGS,
 };
 
-static const uint32_t nrf5_ficr_registers[] = {
+static const uint32_t nrf51_ficr_registers[] = {
 	[NRFX_FICR_CODEPAGESIZE]	= NRF5_FICR_REG(0x010),
 	[NRFX_FICR_CODESIZE]		= NRF5_FICR_REG(0x014),
 	[NRFX_FICR_CLENR0]		= NRF5_FICR_REG(0x028),
@@ -125,23 +125,6 @@ static const uint32_t nrf5_ficr_registers[] = {
 	[NRFX_FICR_FLASH]		= NRFX_UNIMPLEMENTED,
 };
 
-static inline uint32_t nrfx_ficr_register(enum nrfx_ficr_registers r,
-					  int family)
-{
-	switch(family) {
-	case 5:
-		return nrf5_ficr_registers[r];
-	default:
-		return NRFX_UNIMPLEMENTED;
-	}
-}
-
-static inline int is_implemented(enum nrfx_ficr_registers r,
-				 int family)
-{
-	return nrfx_ficr_register(r, family) != NRFX_UNIMPLEMENTED;
-}
-
 /* User Information Configuration Regsters */
 #define NRF5_UICR_BASE 0x10001000
 
@@ -167,23 +150,12 @@ enum nrfx_uicr_registers {
 	NRFX_UICR_NREGS,
 };
 
-static const uint32_t nrf5_uicr_registers[] = {
+static const uint32_t nrf51_uicr_registers[] = {
 	[NRFX_UICR_CLENR0]	= NRF5_UICR_REG(0x000),
 	[NRFX_UICR_RBPCONF]	= NRF5_UICR_REG(0x004),
 	[NRFX_UICR_XTALFREQ]	= NRF5_UICR_REG(0x008),
 	[NRFX_UICR_FWID]	= NRF5_UICR_REG(0x010),
 };
-
-static inline uint32_t nrfx_uicr_register(enum nrfx_ficr_registers r,
-					  int family)
-{
-	switch(family) {
-	case 5:
-		return nrf5_uicr_registers[r];
-	default:
-		return NRFX_UNIMPLEMENTED;
-	}
-}
 
 /* Non-Volatile Memory Controller Registers */
 #define NRF5_NVMC_BASE 0x4001E000
@@ -204,24 +176,13 @@ enum nrfx_nvmc_config_bits {
 	NRFX_NVMC_CONFIG_EEN = 0x02,
 };
 
-static const uint32_t nrf5_nvmc_registers[] = {
+static const uint32_t nrf51_nvmc_registers[] = {
 	[NRFX_NVMC_READY]	= NRF5_NVMC_REG(0x400),
 	[NRFX_NVMC_CONFIG]	= NRF5_NVMC_REG(0x504),
 	[NRFX_NVMC_ERASEPAGE]	= NRF5_NVMC_REG(0x508),
 	[NRFX_NVMC_ERASEALL]	= NRF5_NVMC_REG(0x50C),
 	[NRFX_NVMC_ERASEUICR]	= NRF5_NVMC_REG(0x514),
 };
-
-static inline uint32_t nrfx_nvmc_register(enum nrfx_ficr_registers r,
-					  int family)
-{
-	switch(family) {
-	case 5:
-		return nrf5_nvmc_registers[r];
-	default:
-		return NRFX_UNIMPLEMENTED;
-	}
-}
 
 struct nrfx_info {
 	uint32_t code_page_size;
@@ -234,6 +195,9 @@ struct nrfx_info {
 			      const uint8_t *buffer, uint32_t offset, uint32_t count);
 	} bank[2];
 	int family;
+	const uint32_t *ficr_registers;
+	const uint32_t *uicr_registers;
+	const uint32_t *nvmc_registers;
 	struct target *target;
 };
 
@@ -254,37 +218,43 @@ static inline int reg_write(struct nrfx_info *chip, uint32_t addr, uint32_t in)
 static inline int ficr_read(struct nrfx_info *chip, enum nrfx_ficr_registers r,
 			    uint32_t *out)
 {
-	return reg_read(chip, nrfx_ficr_register(r, chip->family), out);
+	return reg_read(chip, chip->ficr_registers[r], out);
 }
 
 static inline int ficr_write(struct nrfx_info *chip, enum nrfx_ficr_registers r,
 			     uint32_t in)
 {
-	return reg_write(chip, nrfx_ficr_register(r, chip->family), in);
+	return reg_write(chip, chip->ficr_registers[r], in);
 }
 
 static inline int uicr_read(struct nrfx_info *chip, enum nrfx_uicr_registers r,
 			    uint32_t *out)
 {
-	return reg_read(chip, nrfx_uicr_register(r, chip->family), out);
+	return reg_read(chip, chip->uicr_registers[r], out);
 }
 
 static inline int uicr_write(struct nrfx_info *chip, enum nrfx_ficr_registers r,
 			     uint32_t in)
 {
-	return reg_write(chip, nrfx_uicr_register(r, chip->family), in);
+	return reg_write(chip, chip->uicr_registers[r], in);
 }
 
 static inline int nvmc_read(struct nrfx_info *chip, enum nrfx_uicr_registers r,
 			    uint32_t *out)
 {
-	return reg_read(chip, nrfx_nvmc_register(r, chip->family), out);
+	return reg_read(chip, chip->nvmc_registers[r], out);
 }
 
 static inline int nvmc_write(struct nrfx_info *chip, enum nrfx_ficr_registers r,
 			     uint32_t in)
 {
-	return reg_write(chip, nrfx_nvmc_register(r, chip->family), in);
+	return reg_write(chip, chip->nvmc_registers[r], in);
+}
+
+static inline int ficr_is_implemented(struct nrfx_info *chip,
+				      enum nrfx_ficr_registers r)
+{
+	return chip->ficr_registers[r] != NRFX_UNIMPLEMENTED;
 }
 
 union nrfx_device_id {
@@ -684,7 +654,7 @@ static int nrfx_probe(struct flash_bank *bank)
 	int res, have_hwid = 0, have_part = 0;
 	struct nrfx_info *chip = bank->driver_priv;
 
-	if (is_implemented(NRFX_FICR_CONFIGID, chip->family)) {
+	if (ficr_is_implemented(chip, NRFX_FICR_CONFIGID)) {
 		res = ficr_read(chip, NRFX_FICR_CONFIGID, &hwid);
 		if (res != ERROR_OK) {
 			LOG_ERROR("Couldn't read CONFIGID register");
@@ -694,7 +664,7 @@ static int nrfx_probe(struct flash_bank *bank)
 		hwid &= 0xFFFF;	/* HWID is stored in the lower two
 				 * bytes of the CONFIGID register */
 	}
-	if (is_implemented(NRFX_FICR_PART, chip->family)) {
+	if (ficr_is_implemented(chip, NRFX_FICR_PART)) {
 		res = ficr_read(chip, NRFX_FICR_PART, &part);
 		if (res != ERROR_OK) {
 			LOG_ERROR("Couldn't read PART register");
@@ -1159,6 +1129,15 @@ static int nrfx_flash_bank_command(struct flash_bank *bank, int family)
 
 		chip->target = bank->target;
 		chip->family = family;
+		switch(family) {
+		case 5:
+			chip->ficr_registers = nrf51_ficr_registers;
+			chip->uicr_registers = nrf51_uicr_registers;
+			chip->nvmc_registers = nrf51_nvmc_registers;
+			break;
+		default:
+			LOG_ERROR("Unsupported family %d\n", family);
+		}
 	}
 
 	switch (bank->base) {
@@ -1265,7 +1244,7 @@ static int nrfx_info(struct flash_bank *bank, char *buf, int buf_size)
 
 	struct nrfx_info *chip;
 	uint32_t ficr[NRFX_FICR_NREGS];
-	uint32_t uicr[ARRAY_SIZE(nrf5_uicr_registers)];
+	uint32_t uicr[NRFX_UICR_NREGS];
 
 	res = nrfx_get_probed_chip_if_halted(bank, &chip);
 	if (res != ERROR_OK)
@@ -1279,7 +1258,7 @@ static int nrfx_info(struct flash_bank *bank, char *buf, int buf_size)
 			continue;
 		if (res != ERROR_OK) {
 			LOG_ERROR("Couldn't read %" PRIx32,
-				  nrfx_ficr_register(i, chip->family));
+				  chip->ficr_registers[i]);
 			return res;
 		}
 	}
@@ -1291,7 +1270,7 @@ static int nrfx_info(struct flash_bank *bank, char *buf, int buf_size)
 			continue;
 		if (res != ERROR_OK) {
 			LOG_ERROR("Couldn't read %" PRIx32,
-				  nrfx_uicr_register(i, chip->family));
+				  chip->uicr_registers[i]);
 			return res;
 		}
 	}
