@@ -295,6 +295,29 @@ static inline int ficr_is_implemented(struct nrfx_info *chip,
 	return chip->ficr_registers[r & REG_INDEX_MASK] != NRFX_UNIMPLEMENTED;
 }
 
+static inline int uicr_is_implemented(struct nrfx_info *chip,
+				      enum nrfx_uicr_registers r)
+{
+	return chip->uicr_registers[r & REG_INDEX_MASK] != NRFX_UNIMPLEMENTED;
+}
+
+static inline int nvmc_is_implemented(struct nrfx_info *chip,
+				      enum nrfx_nvmc_registers r)
+{
+	return chip->nvmc_registers[r & REG_INDEX_MASK] != NRFX_UNIMPLEMENTED;
+}
+
+static inline int is_implemented(struct nrfx_info *chip, int r)
+{
+	if (is_ficr(r))
+		return ficr_is_implemented(chip, r);
+	if (is_uicr(r))
+		return uicr_is_implemented(chip, r);
+	if (is_nvmc(r))
+		return nvmc_is_implemented(chip, r);
+	return 0;
+}
+
 union nrfx_device_id {
 	uint16_t hwid;
 	uint32_t part;
