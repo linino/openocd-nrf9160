@@ -34,8 +34,10 @@ enum {
 
 /* Factory Information Configuration Registers */
 #define NRF5_FICR_BASE 0x10000000
+#define NRF9_FICR_BASE 0x00ff0000
 
 #define NRF5_FICR_REG(offset) (NRF5_FICR_BASE + offset)
+#define NRF9_FICR_REG(offset) (NRF9_FICR_BASE + offset)
 
 #define NRFX_UNIMPLEMENTED 0xffffffff
 
@@ -201,10 +203,54 @@ static const uint32_t nrf52_ficr_registers[] = {
 	[reg_index(NRFX_FICR_FLASH)]		= NRF5_FICR_REG(0x110),
 };
 
+static const uint32_t nrf91_ficr_registers[] = {
+	[reg_index(NRFX_FICR_CODEPAGESIZE)]	= NRF9_FICR_REG(0x220),
+	[reg_index(NRFX_FICR_CODESIZE)]		= NRF9_FICR_REG(0x224),
+	[reg_index(NRFX_FICR_CLENR0)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_PPFC)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_NUMRAMBLOCK)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_SIZERAMBLOCK0)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_SIZERAMBLOCK1)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_SIZERAMBLOCK2)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_SIZERAMBLOCK3)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_CONFIGID)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_DEVICEID0)]	= NRF9_FICR_REG(0x204),
+	[reg_index(NRFX_FICR_DEVICEID1)]	= NRF9_FICR_REG(0x208),
+	[reg_index(NRFX_FICR_ER0)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_ER1)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_ER2)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_ER3)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_IR0)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_IR1)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_IR2)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_IR3)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_DEVICEADDRTYPE)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_DEVICEADDR0)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_DEVICEADDR1)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_OVERRIDEN)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_NRF_1MBIT0)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_NRF_1MBIT1)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_NRF_1MBIT2)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_NRF_1MBIT3)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_NRF_1MBIT4)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_BLE_1MBIT0)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_BLE_1MBIT1)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_BLE_1MBIT2)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_BLE_1MBIT3)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_BLE_1MBIT4)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_FICR_PART)]		= NRF9_FICR_REG(0x20c),
+	[reg_index(NRFX_FICR_VARIANT)]		= NRF9_FICR_REG(0x210),
+	[reg_index(NRFX_FICR_PACKAGE)]		= NRF9_FICR_REG(0x214),
+	[reg_index(NRFX_FICR_RAM)]		= NRF9_FICR_REG(0x218),
+	[reg_index(NRFX_FICR_FLASH)]		= NRF9_FICR_REG(0x21c),
+};
+
 /* User Information Configuration Regsters */
 #define NRF5_UICR_BASE 0x10001000
+#define NRF9_UICR_BASE 0x00ff8000
 
 #define NRF5_UICR_REG(offset) (NRF5_UICR_BASE + offset)
+#define NRF9_UICR_REG(offset) (NRF9_UICR_BASE + offset)
 #define NRFX_UICR_SIZE 0x1000
 
 static inline uint32_t nrfx_uicr_base(int family)
@@ -213,6 +259,8 @@ static inline uint32_t nrfx_uicr_base(int family)
 	case 51:
 	case 52:
 		return NRF5_UICR_BASE;
+	case 91:
+		return NRF9_UICR_BASE;
 	default:
 		return NRFX_UNIMPLEMENTED;
 	}
@@ -228,7 +276,9 @@ enum nrfx_uicr_registers {
 	NRFX_UICR_PSELRESET1,
 	NRFX_UICR_APPROTECT,
 	NRFX_UICR_NFCPINS,
-	NRFX_UICR_NREGS = ((NRFX_UICR_NFCPINS + 1) & REG_INDEX_MASK),
+	NRFX_UICR_SECUREAPPROTECT,
+	NRFX_UICR_ERASEPROTECT,
+	NRFX_UICR_NREGS = ((NRFX_UICR_ERASEPROTECT + 1) & REG_INDEX_MASK),
 };
 
 static const uint32_t nrf51_uicr_registers[] = {
@@ -240,6 +290,8 @@ static const uint32_t nrf51_uicr_registers[] = {
 	[reg_index(NRFX_UICR_PSELRESET1)]	= NRFX_UNIMPLEMENTED,
 	[reg_index(NRFX_UICR_APPROTECT)]	= NRFX_UNIMPLEMENTED,
 	[reg_index(NRFX_UICR_NFCPINS)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_UICR_SECUREAPPROTECT)] = NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_UICR_ERASEPROTECT)] = NRFX_UNIMPLEMENTED,
 };
 
 static const uint32_t nrf52_uicr_registers[] = {
@@ -251,12 +303,30 @@ static const uint32_t nrf52_uicr_registers[] = {
 	[reg_index(NRFX_UICR_PSELRESET1)]	= NRF5_UICR_REG(0x204),
 	[reg_index(NRFX_UICR_APPROTECT)]	= NRF5_UICR_REG(0x208),
 	[reg_index(NRFX_UICR_NFCPINS)]		= NRF5_UICR_REG(0x20C),
+	[reg_index(NRFX_UICR_SECUREAPPROTECT)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_UICR_ERASEPROTECT)]	= NRFX_UNIMPLEMENTED,
 };
+
+static const uint32_t nrf91_uicr_registers[] = {
+	[reg_index(NRFX_UICR_CLENR0)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_UICR_RBPCONF)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_UICR_XTALFREQ)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_UICR_FWID)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_UICR_PSELRESET0)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_UICR_PSELRESET1)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_UICR_APPROTECT)]	= NRF9_UICR_REG(0x000),
+	[reg_index(NRFX_UICR_NFCPINS)]		= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_UICR_SECUREAPPROTECT)]	= NRF9_UICR_REG(0x02C),
+	[reg_index(NRFX_UICR_ERASEPROTECT)]	= NRF9_UICR_REG(0x030),
+};
+
 
 /* Non-Volatile Memory Controller Registers */
 #define NRF5_NVMC_BASE 0x4001E000
+#define NRF9_NVMC_BASE 0x50039000
 
 #define NRF5_NVMC_REG(offset) (NRF5_NVMC_BASE + offset)
+#define NRF9_NVMC_REG(offset) (NRF9_NVMC_BASE + offset)
 
 enum nrfx_nvmc_registers {
 	NRFX_NVMC_READY = NVMC_BASE,
@@ -278,6 +348,14 @@ static const uint32_t nrf5_nvmc_registers[] = {
 	[reg_index(NRFX_NVMC_ERASEPAGE)]	= NRF5_NVMC_REG(0x508),
 	[reg_index(NRFX_NVMC_ERASEALL)]		= NRF5_NVMC_REG(0x50C),
 	[reg_index(NRFX_NVMC_ERASEUICR)]	= NRF5_NVMC_REG(0x514),
+};
+
+static const uint32_t nrf91_nvmc_registers[] = {
+	[reg_index(NRFX_NVMC_READY)]		= NRF9_NVMC_REG(0x400),
+	[reg_index(NRFX_NVMC_CONFIG)]		= NRF9_NVMC_REG(0x504),
+	[reg_index(NRFX_NVMC_ERASEPAGE)]	= NRFX_UNIMPLEMENTED,
+	[reg_index(NRFX_NVMC_ERASEALL)]		= NRF9_NVMC_REG(0x50C),
+	[reg_index(NRFX_NVMC_ERASEUICR)]	= NRF9_NVMC_REG(0x514),
 };
 
 struct nrfx_info {
@@ -612,6 +690,7 @@ static int nrfx_nvmc_read_only(struct nrfx_info *chip)
 }
 
 static int nrfx_nvmc_generic_erase(struct nrfx_info *chip,
+				   uint32_t erase_addr,
 				   enum nrfx_nvmc_registers erase_register,
 				   uint32_t erase_value)
 {
@@ -621,9 +700,14 @@ static int nrfx_nvmc_generic_erase(struct nrfx_info *chip,
 	if (res != ERROR_OK)
 		goto error;
 
-	res = nvmc_write(chip, erase_register, erase_value);
-	if (res != ERROR_OK)
-		goto set_read_only;
+	if (chip->family != 91) {
+		res = nvmc_write(chip, erase_register, erase_value);
+		if (res != ERROR_OK)
+			goto set_read_only;
+	} else {
+		target_write_u32(chip->target, erase_addr, 0xffffffff);
+		usleep(100000);
+	}
 
 	res = nrfx_wait_for_nvmc(chip);
 	if (res != ERROR_OK)
@@ -645,7 +729,8 @@ static int nrfx_protect_check(struct flash_bank *bank)
 	uint32_t clenr0;
 
 	/* UICR cannot be write protected so just return early */
-	if (bank->base == NRF5_UICR_BASE)
+	if (bank->base == NRF5_UICR_BASE ||
+	    bank->base == NRF9_UICR_BASE)
 		return ERROR_OK;
 
 	struct nrfx_info *chip = bank->driver_priv;
@@ -902,6 +987,7 @@ static int nrfx_erase_all(struct nrfx_info *chip)
 {
 	LOG_DEBUG("Erasing all non-volatile memory");
 	return nrfx_nvmc_generic_erase(chip,
+				       0,
 				       NRFX_NVMC_ERASEALL,
 				       0x00000001);
 }
@@ -938,12 +1024,14 @@ static int nrfx_erase_page(struct flash_bank *bank,
 		}
 
 		res = nrfx_nvmc_generic_erase(chip,
+					      0,
 					      NRFX_NVMC_ERASEUICR,
 					      0x00000001);
 
 
 	} else {
 		res = nrfx_nvmc_generic_erase(chip,
+					      sector->offset,
 					      NRFX_NVMC_ERASEPAGE,
 					      sector->offset);
 	}
@@ -1241,6 +1329,7 @@ static int nrfx_flash_bank_command(struct flash_bank *bank, int family)
 		bank->bank_number = 0;
 		break;
 	case NRF5_UICR_BASE:
+	case NRF9_UICR_BASE:
 		bank->bank_number = 1;
 		break;
 	default:
@@ -1267,6 +1356,11 @@ static int nrfx_flash_bank_command(struct flash_bank *bank, int family)
 			chip->uicr_registers = nrf52_uicr_registers;
 			chip->nvmc_registers = nrf5_nvmc_registers;
 			break;
+		case 91:
+			chip->ficr_registers = nrf91_ficr_registers;
+			chip->uicr_registers = nrf91_uicr_registers;
+			chip->nvmc_registers = nrf91_nvmc_registers;
+			break;
 		default:
 			LOG_ERROR("Unsupported family %d\n", family);
 		}
@@ -1277,6 +1371,7 @@ static int nrfx_flash_bank_command(struct flash_bank *bank, int family)
 		chip->bank[bank->bank_number].write = nrfx_code_flash_write;
 		break;
 	case NRF5_UICR_BASE:
+	case NRF9_UICR_BASE:
 		chip->bank[bank->bank_number].write = nrfx_uicr_flash_write;
 		break;
 	}
@@ -1296,6 +1391,11 @@ FLASH_BANK_COMMAND_HANDLER(nrf51_flash_bank_command)
 FLASH_BANK_COMMAND_HANDLER(nrf52_flash_bank_command)
 {
 	return nrfx_flash_bank_command(bank, 52);
+}
+
+FLASH_BANK_COMMAND_HANDLER(nrf91_flash_bank_command)
+{
+	return nrfx_flash_bank_command(bank, 91);
 }
 
 static int nrfx_handle_mass_erase_command(struct command_invocation *cmd,
@@ -1682,8 +1782,32 @@ static int nrfx_info(struct flash_bank *bank, char *buf, int buf_size)
 	}
 	if (uicr_is_implemented(chip, NRFX_UICR_FWID)) {
 		res = snprintf(buf + written, buf_size - written,
-			       "firmware id: 0x%04"PRIx32,
+			       "firmware id: 0x%04"PRIx32"\n",
 			       uicr[reg_index(NRFX_UICR_FWID)] & 0xFFFF);
+		if (res < 0)
+			return res;
+		written += res;
+	}
+	if (uicr_is_implemented(chip, NRFX_UICR_APPROTECT)) {
+		res = snprintf(buf + written, buf_size - written,
+			       "APPROTECT: %"PRIx32"\n",
+			       uicr[reg_index(NRFX_UICR_APPROTECT)]);
+		if (res < 0)
+			return res;
+		written += res;
+	}
+	if (uicr_is_implemented(chip, NRFX_UICR_SECUREAPPROTECT)) {
+		res = snprintf(buf + written, buf_size - written,
+			       "SECUREAPPROTECT: %"PRIx32"\n",
+			       uicr[reg_index(NRFX_UICR_SECUREAPPROTECT)]);
+		if (res < 0)
+			return res;
+		written += res;
+	}
+	if (uicr_is_implemented(chip, NRFX_UICR_ERASEPROTECT)) {
+		res = snprintf(buf + written, buf_size - written,
+			       "ERASEPROTECT: %"PRIx32"\n",
+			       uicr[reg_index(NRFX_UICR_ERASEPROTECT)]);
 		if (res < 0)
 			return res;
 		written += res;
@@ -1757,6 +1881,22 @@ struct flash_driver nrf52_flash = {
 	.name			= "nrf52",
 	.commands		= nrf5_command_handlers,
 	.flash_bank_command	= nrf52_flash_bank_command,
+	.info			= nrfx_info,
+	.erase			= nrfx_erase,
+	.protect		= nrfx_protect,
+	.write			= nrfx_write,
+	.read			= default_flash_read,
+	.probe			= nrfx_probe,
+	.auto_probe		= nrfx_auto_probe,
+	.erase_check		= default_flash_blank_check,
+	.protect_check		= nrfx_protect_check,
+	.free_driver_priv	= nrfx_free_driver_priv,
+};
+
+struct flash_driver nrf91_flash = {
+	.name			= "nrf91",
+	.commands		= nrf5_command_handlers,
+	.flash_bank_command	= nrf91_flash_bank_command,
 	.info			= nrfx_info,
 	.erase			= nrfx_erase,
 	.protect		= nrfx_protect,
